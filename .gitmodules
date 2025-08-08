@@ -1,0 +1,3 @@
+[submodule "Plugins/ForgeML"]
+	path = Plugins/ForgeML
+	url = https://github.com/JSzajek/ForgeML.git
