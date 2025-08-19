@@ -16,7 +16,9 @@ public class ForgeML_Sandbox : ModuleRules
 			"InputCore", 
 			"EnhancedInput",
 
-            "ForgeML"
+            "ForgeML",
+            "CppFlow",
+            "JsonLib",
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
