@@ -104,15 +104,11 @@ void ALearningNPCActor::ResetActor(const FVector& location)
 
 void ALearningNPCActor::OnFoundCoin()
 {
-	//UE_LOG(LogTemp, Display, TEXT("NPC Found Coin!"));
-
 	AddCurrentStateToTrainingData(2.5f);
 }
 
 void ALearningNPCActor::OnFoundTreasure()
 {
-	//UE_LOG(LogTemp, Display, TEXT("NPC Found Treasure!"));
-
 	AddCurrentStateToTrainingData(100);
 
 	if (mOnResetCallback)
@@ -121,8 +117,6 @@ void ALearningNPCActor::OnFoundTreasure()
 
 void ALearningNPCActor::OnDeath()
 {
-	//UE_LOG(LogTemp, Display, TEXT("NPC has Died!"));
-
 	AddCurrentStateToTrainingData(-100);
 
 	if (mOnResetCallback)
@@ -131,6 +125,9 @@ void ALearningNPCActor::OnDeath()
 
 void ALearningNPCActor::PickNewDirection()
 {
+	if (!mActionSelector)
+		return;
+
 	FVector centerPosition = GetActorLocation();
 
 	// Cache Distance to Treasure.
@@ -211,8 +208,6 @@ void ALearningNPCActor::CastRayTraces(std::vector<float>* distances,
 			if (Hit.Component->ComponentHasTag("Treasure"))
 				type = 4.0f;
 		}
-
-		//UE_LOG(LogTemp, Log, TEXT("Ray %d: %.2f (normalized %.2f)"), i, distance, normalizedDistance);
 
 		if (mDebugTraces)
 		{

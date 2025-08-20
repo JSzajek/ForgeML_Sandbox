@@ -46,11 +46,11 @@ void ABaseDungeonActor::ResetActor(const FVector& location)
 	mVisitedCoins.clear();
 }
 
-void ABaseDungeonActor::MoveInDirection(EMoveDirection Direction, 
-										float DeltaTime)
+void ABaseDungeonActor::MoveInDirection(EMoveDirection direction, 
+										float deltaTime)
 {
 	FVector MovementVector;
-	switch (Direction)
+	switch (direction)
 	{
 	case EMoveDirection::Forward:
 		MovementVector = GetActorForwardVector();
@@ -70,7 +70,7 @@ void ABaseDungeonActor::MoveInDirection(EMoveDirection Direction,
 
 	// Attempt move
 	FHitResult Hit;
-	AddActorWorldOffset(MovementVector * mMoveSpeed * DeltaTime, true, &Hit);
+	AddActorWorldOffset(MovementVector * mMoveSpeed * deltaTime, true, &Hit);
 }
 
 void ABaseDungeonActor::OnBeginOverlap(UPrimitiveComponent* OverlappedComp, 

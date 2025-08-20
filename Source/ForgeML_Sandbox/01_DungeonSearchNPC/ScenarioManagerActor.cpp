@@ -19,6 +19,8 @@ void AScenarioManagerActor::BeginPlay()
 
 	mpModel = std::make_unique<TF::MLModel>("01_DungeonNavigator");
 
+	mGeneration = mpModel->GetModelVersion();
+
 	if (mpModel->DoesModelExists())
 	{
 		if (!mpModel->LoadIfExists())
@@ -83,13 +85,29 @@ void AScenarioManagerActor::BeginPlay()
 void AScenarioManagerActor::BeginDestroy()
 {
 	Super::BeginDestroy();
+
+	if (mTrainingTask)
+		mTrainingTask->Wait();
+}
+
+int32 AScenarioManagerActor::GetModelVersion() const
+{
+	if (!mpModel)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Model is not initialized!"));
+		return 0;
+	}
+
+	return mpModel->GetModelVersion();
 }
 
 void AScenarioManagerActor::SpawnNPCs()
 {
+	if (mTreasurePoints.IsEmpty())
+		return;
+
 	// Spawn the Treasure Point
-	int32 TreasureSpawnIndex = FMath::RandRange(0, mTreasurePoints.Num() - 1);
-	mTreasureLocation = mTreasurePoints[TreasureSpawnIndex];
+	mTreasureLocation = mTreasurePoints[FMath::RandRange(0, mTreasurePoints.Num() - 1)];
 
 	mpTreasure = GetWorld()->SpawnActor<AActor>(mpTreasureTemplate, mTreasureLocation, FRotator::ZeroRotator);
 	mpTreasure->SetActorScale3D(FVector(10));
@@ -126,6 +144,7 @@ void AScenarioManagerActor::SpawnActiveNPC()
 			actor->SetActorScale3D(FVector(10));
 
 			actor->RegisterOnResetCallback(std::bind(&AScenarioManagerActor::OnResetNPC, this, std::placeholders::_1));
+
 			mpNPCs.Add(actor);
 		}
 	}
@@ -142,9 +161,12 @@ void AScenarioManagerActor::SpawnActiveNPC()
 			// Assuming you have a class for the NPC actor
 			ALearningNPCActor* actor = GetWorld()->SpawnActor<ALearningNPCActor>(mpLearningActorTemplate, SpawnLocation, FRotator::ZeroRotator);
 			actor->SetActorScale3D(FVector(10));
-
 			actor->SetTreasureLocation(mpTreasure->GetActorLocation());
+
 			actor->RegisterOnResetCallback(std::bind(&AScenarioManagerActor::OnResetNPC, this, std::placeholders::_1));
+			actor->RegisterReceiveTrainingDataCallback(std::bind(&AScenarioManagerActor::OnReceiveTrainingData, this, std::placeholders::_1));
+			actor->SetActionSelector(std::bind(&AScenarioManagerActor::SelectMotion, this, std::placeholders::_1));
+
 			mpNPCs.Add(actor);
 		}
 	}
@@ -163,9 +185,7 @@ void AScenarioManagerActor::SpawnTrainingNPCs()
 		npc->SetTreasureLocation(mpTreasure->GetActorLocation());
 
 		npc->RegisterOnResetCallback(std::bind(&AScenarioManagerActor::OnResetNPC, this, std::placeholders::_1));
-
 		npc->RegisterReceiveTrainingDataCallback(std::bind(&AScenarioManagerActor::OnReceiveTrainingData, this, std::placeholders::_1));
-
 		npc->SetActionSelector(std::bind(&AScenarioManagerActor::SelectMotion, this, std::placeholders::_1));
 
 		mpNPCs.Add(npc);
@@ -258,8 +278,6 @@ std::tuple<EMoveDirection, float> AScenarioManagerActor::SelectMotion(const std:
 		// Random Exploration
 		action = static_cast<EMoveDirection>(FMath::RandRange((int)EMoveDirection::None, (int)EMoveDirection::COUNT - 1));
 		action_f = static_cast<float>(action);
-
-		//UE_LOG(LogTemp, Display, TEXT("Random Move Direction: %d"), action);
 	}
 	else
 	{
@@ -290,8 +308,6 @@ std::tuple<EMoveDirection, float> AScenarioManagerActor::SelectMotion(const std:
 
 						int actionIndex = static_cast<int>(FMath::RoundToInt(action_f));
 						actionIndex = FMath::Clamp(actionIndex, (int)EMoveDirection::None, static_cast<int>(EMoveDirection::COUNT) - 1);
-
-						//UE_LOG(LogTemp, Display, TEXT("Prediction [%f] Move Direction: %d"), action_f, actionIndex);
 
 						action = static_cast<EMoveDirection>(actionIndex);
 					}

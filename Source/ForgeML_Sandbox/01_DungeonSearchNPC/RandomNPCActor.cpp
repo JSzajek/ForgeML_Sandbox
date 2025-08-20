@@ -30,8 +30,6 @@ void ARandomNPCActor::TickActor(float DeltaTime,
 
 void ARandomNPCActor::OnDeath()
 {
-	//UE_LOG(LogTemp, Display, TEXT("NPC has Died!"));
-
 	if (mOnResetCallback)
 		mOnResetCallback(this);
 }
@@ -45,13 +43,10 @@ void ARandomNPCActor::ResetActor(const FVector& location)
 
 void ARandomNPCActor::OnFoundCoin()
 {
-	//UE_LOG(LogTemp, Display, TEXT("NPC Found Coin!"));
 }
 
 void ARandomNPCActor::OnFoundTreasure()
 {
-	//UE_LOG(LogTemp, Display, TEXT("NPC Found Treasure!"));
-
 	if (mOnResetCallback)
 		mOnResetCallback(this);
 }
